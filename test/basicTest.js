@@ -61,6 +61,15 @@ describe('M', function() {
       });
     });
 
+    it('fmap should change value inside M', function(done) {
+      M.pure(null, 1, 2, 3).fmap(function(a, b, c) {
+        return a + b + c;
+      }).run(function(error, x) {
+        assert.ifError(error);
+        assert.equal(x, 6);
+        setImmediate(done);
+      });
+    });
     it('bind works like fmap, if function is returned not an M instance and not undefined', function(done) {
       M.pure(null, 1, 2, 3).bind(function(a, b, c) {
         return a + b + c;

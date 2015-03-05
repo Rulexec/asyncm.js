@@ -11,7 +11,7 @@
   M.tick = function() {
     var args = arguments;
     return M.sleep(0).then(function() {
-      return M.pure.apply(null, args);
+      this.cont.apply(null, args);
     });
   };
 
@@ -239,29 +239,35 @@
             var args = arguments;
 
             nextRunning = (function() {
-              var m;
+              var m, continued = null;
               try {
-                m = f.apply(null, args);
+                m = f.apply({
+                  cont: function() {
+                    continued = arguments;
+                  }
+                }, args);
               } catch (e) {
-                return M.pure(e);
+                callback(e);
+                return M.alreadyFinished();
+              }
+
+              if (continued !== null) {
+                callback.apply(null, continued);
+                return M.alreadyFinished();
               }
 
               if (!(m instanceof M)) {
                 if (m === undefined) {
-                  m = M.pure.bind(null, null).apply(null, args);
+                  callback.bind(null, null).apply(null, args);
+                  return M.alreadyFinished();
                 } else {
-                  m = M.pure(null, m);
+                  callback(null, m);
+                  return M.alreadyFinished();
                 }
               }
-              /*if (!(m instanceof M)) {
-                //
-                // jshint debug:true
-                debugger;
-                return M.pure(new Error('f not returns a M instance!'));
-              }*/
 
-              return m;
-            })().run(callback, options);
+              return m.run(callback, options);
+            })();
           } else {
             nextCancelled = true;
           }
@@ -285,31 +291,31 @@
               } else if (status === M.ALREADY_FINISHED) {
                 if (nextCancelled) {
                   cancelled = true;
-                  return M.pure(null, M.CANCELLED);
+                  return this.cont(null, M.CANCELLED);
                 } else {
                   return nextRunning.cancel().bind(function(nextStatus) {
                     if (nextCancelled) {
                       cancelled = true;
-                      return M.pure(null, M.CANCELLED);
+                      return this.cont(null, M.CANCELLED);
                     }
 
                     switch (nextStatus) {
                     case M.CANCELLED:
                       cancelled = true;
-                      return M.pure(null, M.CANCELLED);
+                      return this.cont(null, M.CANCELLED);
                     case M.ALREADY_FINISHED:
                       alreadyFinished = true;
-                      return M.pure(null, M.ALREADY_FINISHED);
+                      return this.cont(null, M.ALREADY_FINISHED);
                     case M.CANNOT_BE_CANCELLED:
                       cannotBeCancelled = true;
-                      return M.pure(null, M.CANNOT_BE_CANCELLED);
+                      return this.cont(null, M.CANNOT_BE_CANCELLED);
                     default: throw new Error('Unknown status: ' + nextStatus);
                     }
                   });
                 }
               } else if (status === M.CANNOT_BE_CANCELLED) {
                 cannotBeCancelled = true;
-                return M.pure(null, M.CANNOT_BE_CANCELLED);
+                return this.cont(null, M.CANNOT_BE_CANCELLED);
               } else {
                 throw new Error('Unknown status: ' + status);
               }
@@ -321,15 +327,15 @@
 
     this.bind = function(f) {
       return self.then(function(error) {
-        if (error) return M.pure(error);
-        else return f.apply(null, Array.prototype.slice.call(arguments, 1));
+        if (error) this.cont(error);
+        else return f.apply(this, Array.prototype.slice.call(arguments, 1));
       });
     };
 
     this.bindError = function(f) {
       return self.then(function(error) {
-        if (error) return f(error);
-        else return M.pure.apply(null, arguments);
+        if (error) return f.call(this, error);
+        else this.cont.apply(null, arguments);
       });
     };
 
@@ -337,23 +343,9 @@
       return self.bind(function() { return m; });
     };
 
-    this.see = function(f) {
-      return self.then(function() {
-        f.apply(null, arguments);
-        return M.pure.apply(null, arguments);
-      });
-    };
-
-    this.seeBind = function(f) {
-      return self.bind(function() {
-        f.apply(null, arguments);
-        return M.pure.bind(null, null).apply(null, arguments);
-      });
-    };
-
     this.fmap = function(f) {
       return self.bind(function() {
-        return M.pure(null, f.apply(null, arguments));
+        this.cont(null, f.apply(null, arguments));
       });
     };
 
