@@ -1,0 +1,29 @@
+{
+  "name": "asyncm",
+  "version": "0.0.1",
+  "author": "Alexander Ruliov <alexander.ruliov@gmail.com>",
+  "description": "Cancellable promises, that are not compatible with Promises/A+ spec.",
+  "scripts": {
+    "test": "mocha"
+  },
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Rulexec/asyncm.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Rulexec/asyncm.js/issues"
+  },
+  "homepage": "https://github.com/Rulexec/asyncm.js",
+  "keywords": [
+    "async",
+    "promises",
+    "futures",
+    "monads"
+  ],
+  "devDependencies": {
+    "mocha": "^2.1.0"
+  }
+}
