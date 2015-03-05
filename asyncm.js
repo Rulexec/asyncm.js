@@ -368,6 +368,14 @@
     }
   }
 
+  M.once = function(f) {
+    var g = function() {
+      g = function(){};
+      f.apply(this, arguments);
+    };
+    return function() { g.apply(this, arguments); };
+  };
+
   if (typeof module !== 'undefined' && module.exports !== 'undefined') {
     module.exports = M;
   } else if (typeof angular !== undefined && typeof angular.module === 'function') {
