@@ -39,6 +39,15 @@
     });
   };
 
+  M.wrap = function(f) {
+    return function() {
+      var args = arguments;
+      return new M(function(callback, options) {
+        return f.bind(this, callback, options).apply(null, args);
+      });
+    };
+  };
+
   M.lazy = function(f) {
     var g = function(callback, options) {
       var m = f(options);
@@ -225,6 +234,30 @@
 
     var self = this;
 
+    function executeWithCont(f, options) {
+      var args = options.args || [],
+          onException = options.exception || function(){},
+          onContinued = options.continued || function(){},
+          onResult = options.result || function(){};
+
+      var result, continued = null;
+      try {
+        result = f.apply({
+          cont: function() {
+            continued = arguments;
+          }
+        }, args);
+      } catch (e) {
+        return onException(e);
+      }
+
+      if (continued !== null) {
+        return onContinued(continued);
+      } else {
+        return onResult(result);
+      }
+    }
+
     this.then = function(f) {
       return new M(function(callback, options) {
         var nextRunning = null,
@@ -237,34 +270,30 @@
             var args = arguments;
 
             nextRunning = (function() {
-              var m, continued = null;
-              try {
-                m = f.apply({
-                  cont: function() {
-                    continued = arguments;
+              return executeWithCont(f, {
+                args: args,
+                exception: function(e) {
+                  callback(e);
+                  return M.alreadyFinished();
+                },
+                continued: function(contArgs) {
+                  callback.apply(null, contArgs);
+                  return M.alreadyFinished();
+                },
+                result: function(m) {
+                  if (!(m instanceof M)) {
+                    if (m === undefined) {
+                      callback.bind(null, null).apply(null, args);
+                      return M.alreadyFinished();
+                    } else {
+                      callback(null, m);
+                      return M.alreadyFinished();
+                    }
                   }
-                }, args);
-              } catch (e) {
-                callback(e);
-                return M.alreadyFinished();
-              }
 
-              if (continued !== null) {
-                callback.apply(null, continued);
-                return M.alreadyFinished();
-              }
-
-              if (!(m instanceof M)) {
-                if (m === undefined) {
-                  callback.bind(null, null).apply(null, args);
-                  return M.alreadyFinished();
-                } else {
-                  callback(null, m);
-                  return M.alreadyFinished();
+                  return m.run(callback, options);
                 }
-              }
-
-              return m.run(callback, options);
+              });
             })();
           } else {
             nextCancelled = true;
@@ -351,7 +380,18 @@
       if (typeof callback !== 'function') callback = function(){};
       if (!options) options = {};
 
-      return normalizeRunning(run(callback, options));
+      return normalizeRunning(executeWithCont(run, {
+        args: [callback, options],
+        exception: function(e) {
+          callback(e);
+          return M.alreadyFinished();
+        },
+        continued: function(contArgs) {
+          callback.apply(null, contArgs);
+          return M.alreadyFinished();
+        },
+        result: function(running) { return running; }
+      }));
     };
 
     function normalizeRunning(running) {

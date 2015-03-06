@@ -3,6 +3,33 @@ var assert = require('assert'),
     M = require('../asyncm');
 
 describe('M', function() {
+  describe('this.cont', function() {
+    it('should work in M constructor', function(done) {
+      var multiplyWithDelay = M.wrap(function(callback, options, n) {
+        if (typeof n === 'number') {
+          setTimeout(function() {
+            callback(null, n * 2);
+          }, 0);
+        } else {
+          this.cont(n + ' is not a number');
+        }
+      });
+
+      M.parallel([
+        multiplyWithDelay(3),
+        multiplyWithDelay('str').bindError(function(error) { this.cont(null, error); })
+      ], {single: true}).run(function(error, results) {
+        assert.ifError(error);
+        assert.equal(results.length, 2);
+
+        assert.equal(results[0], 6);
+        assert.equal(results[1], 'str is not a number');
+
+        setImmediate(done);
+      });
+    });
+  });
+
   describe('.pure', function() {
     it('binds on non-error', function(done) {
       M.pure(null, 'answer', 42).bind(function(text, number) {
