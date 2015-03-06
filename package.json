@@ -1,6 +1,6 @@
 {
   "name": "asyncm",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "Alexander Ruliov <alexander.ruliov@gmail.com>",
   "description": "Cancellable promises, that are not compatible with Promises/A+ spec.",
   "main": "asyncm.js",

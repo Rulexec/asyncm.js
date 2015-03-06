@@ -156,7 +156,8 @@
       var errorCatcher = options.errorCatcher,
           drop = options.drop,
           single = options.single,
-          limit = Math.min(options.limit || ps.length, ps.length);
+          limit = Math.min(options.limit || ps.length, ps.length),
+          f = options.f;
 
       if (typeof errorCatcher !== 'function') errorCatcher = function(){};
 
@@ -186,6 +187,7 @@
 
         var index = runPos;
         var m = ps[runPos++];
+        if (f) { m = f(m, index); }
 
         running++;
         m.run(function(error) {
