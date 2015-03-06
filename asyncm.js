@@ -147,8 +147,7 @@
       var errorCatcher = options.errorCatcher,
           drop = options.drop,
           single = options.single,
-          limit = Math.min(options.limit || ps.length, ps.length),
-          f = options.f;
+          limit = Math.min(options.limit || ps.length, ps.length);
 
       if (typeof errorCatcher !== 'function') errorCatcher = function(){};
 
@@ -178,7 +177,6 @@
 
         var index = runPos;
         var m = ps[runPos++];
-        if (f) m = f(m, index);
 
         running++;
         m.run(function(error) {
@@ -368,9 +366,10 @@
     }
   }
 
-  M.once = function(f) {
+  M.once = function(f, otherTimes) {
+    if (otherTimes === undefined) otherTimes = function(){};
     var g = function() {
-      g = function(){};
+      g = otherTimes;
       f.apply(this, arguments);
     };
     return function() { g.apply(this, arguments); };
