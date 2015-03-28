@@ -419,7 +419,7 @@
 
   if (typeof module !== 'undefined' && module.exports !== 'undefined') {
     module.exports = M;
-  } else if (typeof angular !== undefined && typeof angular.module === 'function') {
+  } else if (typeof angular !== 'undefined' && typeof angular.module === 'function') {
     angular.module('asyncm', []).service('M', function() { return M; });
   } else {
     var oldM = window.M;
