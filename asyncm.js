@@ -39,6 +39,33 @@
     });
   };
 
+  // hides evaluation of f inside of M
+  M.lift = function(f) {
+    return function() {
+      var args = arguments;
+      return new M(function(callback, options) {
+        var m = f.apply(null, args);
+        return m.run(callback, options);
+      });
+    };
+  };
+
+  // S means that f introduced just side-effect and result must be ignored
+  M.liftS = function(f) {
+    return function() {
+      var args = arguments;
+      if (this instanceof MThis) {
+        f.apply(null, args);
+        this.cont(null);
+      } else {
+        return new M(function() {
+          f.apply(null, args);
+          this.cont(null);
+        });
+      }
+    };
+  };
+
   M.wrap = function(f) {
     return function() {
       var args = arguments;
@@ -231,6 +258,10 @@
     };
   };
 
+  function MThis(cont) {
+    this.cont = cont;
+  }
+
   function M(run) {
     if (!(this instanceof M)) return new M(run);
 
@@ -244,11 +275,9 @@
 
       var result, continued = null;
       try {
-        result = f.apply({
-          cont: function() {
-            continued = arguments;
-          }
-        }, args);
+        result = f.apply(new MThis(function() {
+          continued = arguments;
+        }), args);
       } catch (e) {
         return onException(e);
       }
@@ -285,7 +314,7 @@
                 result: function(m) {
                   if (!(m instanceof M)) {
                     if (m === undefined) {
-                      callback.bind(null, null).apply(null, args);
+                      callback.apply(null, args);
                       return M.alreadyFinished();
                     } else {
                       callback(null, m);
@@ -351,6 +380,13 @@
             });
           }
         };
+      });
+    };
+
+    this.after = function(f, g) {
+      return self.then(function(error) {
+        if (error) return g.call(this, error);
+        else return f.apply(this, Array.prototype.slice.call(arguments, 1));
       });
     };
 
