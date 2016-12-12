@@ -1,6 +1,6 @@
 AsyncM
 ======
-Cancellable promises, that are not compatible with Promises/A+ spec.
+Cancellable promises
 -----------------
 
 **TODO:** Write a readme.

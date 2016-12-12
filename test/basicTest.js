@@ -41,8 +41,8 @@ describe('M', function() {
       });
     });
 
-    it('then', function(done) {
-      M.pure('scary', 13).then(function(scary, thirteen) {
+    it('next', function(done) {
+      M.pure('scary', 13).next(function(scary, thirteen) {
         return M.pure(null, scary + ' ' + thirteen);
       }).run(function(error, s) {
         assert.ifError(error);

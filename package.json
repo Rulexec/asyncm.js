@@ -1,11 +1,11 @@
 {
   "name": "asyncm",
-  "version": "0.4.0",
+  "version": "1.0.0",
   "author": "Alexander Ruliov <alexander.ruliov@gmail.com>",
   "description": "Cancellable promises, that are not compatible with Promises/A+ spec.",
   "main": "asyncm.js",
   "scripts": {
-    "test": "mocha"
+    "test": "node_modules/mocha/bin/mocha"
   },
   "directories": {
     "test": "test"
