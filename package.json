@@ -1,6 +1,6 @@
 {
   "name": "asyncm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Alexander Ruliov <alexander.ruliov@gmail.com>",
   "description": "Cancellable promises",
   "main": "asyncm.js",
