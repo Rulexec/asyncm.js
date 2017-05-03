@@ -1,6 +1,6 @@
 var assert = require('assert'),
 
-    M = require('../asyncm2'),
+    M = require('../asyncm'),
     testUtil = require('./util'),
 		util = require('util');
 

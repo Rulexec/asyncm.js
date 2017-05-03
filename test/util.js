@@ -1,6 +1,6 @@
 var assert = require('assert'),
 
-    M = require('../asyncm2');
+    M = require('../asyncm');
 
 var sleep = exports.sleep = function(t) {
 	return new M(function(result) {
